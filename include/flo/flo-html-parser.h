@@ -3,4 +3,4 @@
 
 bool parseFile(flo_html_String fileLocation, flo_html_Arena scratch);
 
-void benchmark();
+bool benchmark();
