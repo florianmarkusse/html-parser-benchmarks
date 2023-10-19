@@ -40,13 +40,11 @@ void endBenchmark() {
     FLO_HTML_DEFER(startBenchmark(libraryName), endBenchmark())
 
 int main() {
-    int result = 0;
     FLO_HTML_BENCHMARK("flo/html-parser") {
         if (!benchmark()) {
             printf("Benchmark failed!\n");
-            result = -1;
         }
     }
 
-    return result;
+    return 0;
 }

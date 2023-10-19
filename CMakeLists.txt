@@ -31,9 +31,11 @@ add_executable(${EXECUTABLE_NAME} ${SOURCE_FILES})
 # The html-parser library is linked to and included here.
 set(LIBRARY_DIR ${CMAKE_SOURCE_DIR}/libs)
 target_link_libraries(${EXECUTABLE_NAME} PRIVATE ${LIBRARY_DIR}/html-parser/build/libhtml-parser-Release.a)
+target_link_libraries(${EXECUTABLE_NAME} PRIVATE ${LIBRARY_DIR}/lexbor/liblexbor_static.a)
 
 target_include_directories(${EXECUTABLE_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_include_directories(${EXECUTABLE_NAME} PRIVATE ${LIBRARY_DIR}/html-parser/include)
+target_include_directories(${EXECUTABLE_NAME} PRIVATE ${LIBRARY_DIR}/lexbor/source)
 
 target_compile_options(${EXECUTABLE_NAME} PRIVATE
     $<$<CONFIG:Debug>:-O0 -g>
