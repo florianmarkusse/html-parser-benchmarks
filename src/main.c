@@ -8,6 +8,8 @@
 #include "lexbor/lexbor-lexbor.h"
 #include "util/decorator.h"
 
+#define NUM_RUNS 10
+
 struct timespec start;
 struct timespec end;
 double cpu_time_used = NAN;
@@ -30,20 +32,26 @@ void endBenchmark() {
 
 int main() {
     FLO_HTML_BENCHMARK("flo/html-parser - Single Arena for all files") {
-        if (!benchmarkFloHtmlParserSingleArena(INPUTS_DIR)) {
-            printf("Benchmark failed!\n");
+        for (int i = 0; i < NUM_RUNS; i++) {
+            if (!benchmarkFloHtmlParserSingleArena(INPUTS_DIR)) {
+                printf("Benchmark failed!\n");
+            }
         }
     }
 
     FLO_HTML_BENCHMARK("flo/html-parser - New Arena for every file") {
-        if (!benchmarkFloHtmlParserArenaPerFile(INPUTS_DIR)) {
-            printf("Benchmark failed!\n");
+        for (int i = 0; i < NUM_RUNS; i++) {
+            if (!benchmarkFloHtmlParserArenaPerFile(INPUTS_DIR)) {
+                printf("Benchmark failed!\n");
+            }
         }
     }
 
     FLO_HTML_BENCHMARK("lexbor/lexbor") {
-        if (!benchmarkLexbor(INPUTS_DIR)) {
-            printf("Benchmark failed!\n");
+        for (int i = 0; i < NUM_RUNS; i++) {
+            if (!benchmarkLexbor(INPUTS_DIR)) {
+                printf("Benchmark failed!\n");
+            }
         }
     }
 
