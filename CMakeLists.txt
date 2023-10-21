@@ -21,6 +21,7 @@ endif()
 list(APPEND SOURCE_FILES
     "src/main.c"
     "src/flo/flo-html-parser.c"
+    "src/lexbor/lexbor-lexbor.c"
     )
 
 set(EXECUTABLE_NAME "${PROJECT_NAME}-${CMAKE_BUILD_TYPE}")

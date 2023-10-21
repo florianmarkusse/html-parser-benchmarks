@@ -1,27 +1,19 @@
 
-#include "flo/flo-html-parser.h"
 #include <math.h>
 #include <stdio.h>
 #include <time.h>
 
-#define for_str_split(iter, src, split_by)                                     \
-    for (str macro_var(src_) = (src),                                          \
-             (iter) = str_pop_first_split(*macro_var(src_), split_by),         \
-             macro_var(split_by_) = split_by;                                  \
-                                                                               \
-         str_valid(macro_var(src_));                                           \
-                                                                               \
-         (iter) = str_pop_first_split(&macro_var(src_), macro_var(split_by_)))
-
-#define FLO_HTML_DEFER(start, end)                                             \
-    for (int(_i_) = (start, 0); !(_i_); ((_i_) += 1), end)
+#include "definitions.h"
+#include "flo/flo-html-parser.h"
+#include "lexbor/lexbor-lexbor.h"
+#include "util/decorator.h"
 
 struct timespec start;
 struct timespec end;
 double cpu_time_used = NAN;
 
 void startBenchmark(const char *libraryName) {
-    printf("Starting benchmark for library %s\n", libraryName);
+    printf("Starting benchmark for %s\n", libraryName);
     clock_gettime(CLOCK_MONOTONIC, &start);
 }
 
@@ -33,15 +25,24 @@ void endBenchmark() {
     printf("Elapsed Time: %.2f milliseconds\n\n", cpu_time_used_ms);
 }
 
-#define FLO_HTML_BENCHMARK_2(libraryName)                                      \
-    FLO_HTML_DEFER_WITH_RETURN(startBenchmark(libraryName), endBenchmark())
-
 #define FLO_HTML_BENCHMARK(libraryName)                                        \
     FLO_HTML_DEFER(startBenchmark(libraryName), endBenchmark())
 
 int main() {
-    FLO_HTML_BENCHMARK("flo/html-parser") {
-        if (!benchmark()) {
+    FLO_HTML_BENCHMARK("flo/html-parser - Single Arena for all files") {
+        if (!benchmarkFloHtmlParserSingleArena(INPUTS_DIR)) {
+            printf("Benchmark failed!\n");
+        }
+    }
+
+    FLO_HTML_BENCHMARK("flo/html-parser - New Arena for every file") {
+        if (!benchmarkFloHtmlParserArenaPerFile(INPUTS_DIR)) {
+            printf("Benchmark failed!\n");
+        }
+    }
+
+    FLO_HTML_BENCHMARK("lexbor/lexbor") {
+        if (!benchmarkLexbor(INPUTS_DIR)) {
             printf("Benchmark failed!\n");
         }
     }

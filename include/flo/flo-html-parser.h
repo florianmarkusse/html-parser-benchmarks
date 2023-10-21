@@ -1,6 +1,9 @@
-#include <flo/html-parser.h>
+#ifndef FLO_FLO_HTML_PARSER_H
+#define FLO_FLO_HTML_PARSER_H
+
 #include <stdbool.h>
 
-bool parseFile(flo_html_String fileLocation, flo_html_Arena scratch);
+bool benchmarkFloHtmlParserSingleArena(char *inputDirectory);
+bool benchmarkFloHtmlParserArenaPerFile(char *inputDirectory);
 
-bool benchmark();
+#endif

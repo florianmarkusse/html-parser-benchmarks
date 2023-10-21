@@ -1,11 +1,10 @@
 
 #include <dirent.h>
+#include <flo/html-parser.h>
 
-#include "definitions.h"
 #include "flo/flo-html-parser.h"
-#include "util/decorator.h"
 
-bool parseFile(flo_html_String fileLocation, flo_html_Arena scratch) {
+static bool parseFile(flo_html_String fileLocation, flo_html_Arena scratch) {
     flo_html_ParsedHTML parsed;
     if (flo_html_fromFile(fileLocation, &parsed, &scratch) != USER_SUCCESS) {
         return false;
@@ -14,7 +13,7 @@ bool parseFile(flo_html_String fileLocation, flo_html_Arena scratch) {
     return true;
 }
 
-bool benchmark() {
+bool benchmarkFloHtmlParserSingleArena(char *inputDirectory) {
     flo_html_Arena arena = flo_html_newArena(1U << 27U);
     void *jmp_buf[5];
     if (__builtin_setjmp(jmp_buf)) {
@@ -24,25 +23,65 @@ bool benchmark() {
     }
     arena.jmp_buf = jmp_buf;
 
-    DIR *dir;
-    FLO_HTML_WITH_DIRECTORY_ELSE(dir, INPUTS_DIR) {
+    DIR *dir = opendir(inputDirectory);
+    if (dir) {
         char fileLocation[1024];
-        FLO_HTML_FILE_NAME_ITERATOR(dir, fileLocation) {
+
+        struct dirent *ent = (readdir(dir), readdir(dir), readdir(dir));
+        while (ent != NULL) {
+            snprintf(fileLocation, sizeof(fileLocation), "%s%s", inputDirectory,
+                     ent->d_name);
             if (!parseFile(FLO_HTML_S_LEN(fileLocation, strlen(fileLocation)),
-                           arena) != USER_SUCCESS) {
-                printf("Failed to parse file!!\n");
+                           arena)) {
+                printf("Failed to parse file %s\n", fileLocation);
                 flo_html_destroyArena(&arena);
                 return false;
             }
+
+            ent = readdir(dir);
         }
-    }
-    else {
+    } else {
         printf("Incorrect input directory!\n");
         flo_html_destroyArena(&arena);
         return false;
     }
 
     flo_html_destroyArena(&arena);
+
+    return true;
+}
+
+bool benchmarkFloHtmlParserArenaPerFile(char *inputDirectory) {
+    DIR *dir = opendir(inputDirectory);
+    if (dir) {
+        char fileLocation[1024];
+
+        struct dirent *ent = (readdir(dir), readdir(dir), readdir(dir));
+        while (ent != NULL) {
+            snprintf(fileLocation, sizeof(fileLocation), "%s%s", inputDirectory,
+                     ent->d_name);
+            flo_html_Arena arena = flo_html_newArena(1U << 27U);
+            void *jmp_buf[5];
+            if (__builtin_setjmp(jmp_buf)) {
+                flo_html_destroyArena(&arena);
+                FLO_HTML_PRINT_ERROR("OOM in arena!\n");
+                return false;
+            }
+            arena.jmp_buf = jmp_buf;
+            if (!parseFile(FLO_HTML_S_LEN(fileLocation, strlen(fileLocation)),
+                           arena)) {
+                printf("Failed to parse file %s\n", fileLocation);
+                flo_html_destroyArena(&arena);
+                return false;
+            }
+
+            flo_html_destroyArena(&arena);
+            ent = readdir(dir);
+        }
+    } else {
+        printf("Incorrect input directory!\n");
+        return false;
+    }
 
     return true;
 }
