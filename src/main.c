@@ -23,7 +23,7 @@ void endBenchmark() {
     clock_gettime(CLOCK_MONOTONIC, &end);
     cpu_time_used =
         (end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec) / 1e9;
-    double cpu_time_used_ms = cpu_time_used * 1000;
+    double cpu_time_used_ms = cpu_time_used * 1000 / NUM_RUNS;
     printf("Elapsed Time: %.2f milliseconds\n\n", cpu_time_used_ms);
 }
 
