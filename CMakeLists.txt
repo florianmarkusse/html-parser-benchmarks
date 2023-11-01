@@ -20,8 +20,9 @@ endif()
 
 list(APPEND SOURCE_FILES
     "src/main.c"
-    "src/flo/flo-html-parser.c"
-    "src/lexbor/lexbor-lexbor.c"
+    "src/flo/html-parser.c"
+    "src/lexbor/lexbor.c"
+    "src/google/gumbo-parser.c"
     )
 
 set(EXECUTABLE_NAME "${PROJECT_NAME}-${CMAKE_BUILD_TYPE}")
@@ -33,10 +34,13 @@ add_executable(${EXECUTABLE_NAME} ${SOURCE_FILES})
 set(LIBRARY_DIR ${CMAKE_SOURCE_DIR}/libs)
 target_link_libraries(${EXECUTABLE_NAME} PRIVATE ${LIBRARY_DIR}/html-parser/build/libhtml-parser-Release.a)
 target_link_libraries(${EXECUTABLE_NAME} PRIVATE ${LIBRARY_DIR}/lexbor/liblexbor_static.a)
+target_link_libraries(${EXECUTABLE_NAME} PRIVATE ${LIBRARY_DIR}/gumbo-parser/.libs/libgumbo.a)
 
 target_include_directories(${EXECUTABLE_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
+
 target_include_directories(${EXECUTABLE_NAME} PRIVATE ${LIBRARY_DIR}/html-parser/include)
 target_include_directories(${EXECUTABLE_NAME} PRIVATE ${LIBRARY_DIR}/lexbor/source)
+target_include_directories(${EXECUTABLE_NAME} PRIVATE ${LIBRARY_DIR}/gumbo-parser/src)
 
 target_compile_options(${EXECUTABLE_NAME} PRIVATE
     $<$<CONFIG:Debug>:-O0 -g>

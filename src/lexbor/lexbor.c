@@ -2,7 +2,7 @@
 #include <lexbor/core/fs.h>
 #include <lexbor/html/html.h>
 
-#include "lexbor/lexbor-lexbor.h"
+#include "lexbor/lexbor.h"
 
 static bool parseFile(lxb_char_t *fileName) {
     size_t html_len;

@@ -5,7 +5,8 @@
 
 #include "definitions.h"
 #include "flo/flo-html-parser.h"
-#include "lexbor/lexbor-lexbor.h"
+#include "google/gumbo-parser.h"
+#include "lexbor/lexbor.h"
 #include "util/decorator.h"
 
 #define NUM_RUNS 10
@@ -50,6 +51,14 @@ int main() {
     FLO_HTML_BENCHMARK("lexbor/lexbor") {
         for (int i = 0; i < NUM_RUNS; i++) {
             if (!benchmarkLexbor(INPUTS_DIR)) {
+                printf("Benchmark failed!\n");
+            }
+        }
+    }
+
+    FLO_HTML_BENCHMARK("google/gumbo-parser") {
+        for (int i = 0; i < NUM_RUNS; i++) {
+            if (!benchmarkGumbo(INPUTS_DIR)) {
                 printf("Benchmark failed!\n");
             }
         }

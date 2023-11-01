@@ -1,5 +1,5 @@
-#ifndef LEXBOR_LEXBOR_LEXBOR_H
-#define LEXBOR_LEXBOR_LEXBOR_H
+#ifndef LEXBOR_LEXBOR_H
+#define LEXBOR_LEXBOR_H
 
 #ifdef __cplusplus
 extern "C" {
