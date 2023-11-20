@@ -39,6 +39,7 @@ target_link_libraries(${EXECUTABLE_NAME} PRIVATE ${LIBRARY_DIR}/gumbo-parser/.li
 target_include_directories(${EXECUTABLE_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 target_include_directories(${EXECUTABLE_NAME} PRIVATE ${LIBRARY_DIR}/html-parser/include)
+target_include_directories(${EXECUTABLE_NAME} PRIVATE ${LIBRARY_DIR}/html-parser/util/include)
 target_include_directories(${EXECUTABLE_NAME} PRIVATE ${LIBRARY_DIR}/lexbor/source)
 target_include_directories(${EXECUTABLE_NAME} PRIVATE ${LIBRARY_DIR}/gumbo-parser/src)
 

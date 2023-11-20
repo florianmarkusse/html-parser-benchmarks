@@ -1,8 +1,11 @@
 #include "flo/flo-html-parser.h"
 #include <dirent.h>
 #include <flo/html-parser.h>
+#include <sys/mman.h>
 
-static bool parseFile(flo_html_String fileLocation, flo_html_Arena scratch) {
+#define CAP 1 << 27
+
+static bool parseFile(flo_String fileLocation, flo_Arena scratch) {
     flo_html_Dom *dom = flo_html_createDomFromFile(fileLocation, &scratch);
     if (dom == NULL) {
         return false;
@@ -12,12 +15,28 @@ static bool parseFile(flo_html_String fileLocation, flo_html_Arena scratch) {
 }
 
 bool benchmarkFloHtmlParserSingleArena(char *inputDirectory) {
-    flo_html_Arena arena = flo_html_newArena(1U << 27U);
+    char *begin = mmap(NULL, CAP, PROT_READ | PROT_WRITE,
+                       MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+    if (begin == MAP_FAILED) {
+        FLO_PRINT_ERROR("Failed to allocate memory!\n");
+        return -1;
+    }
+
+    flo_Arena arena = flo_createArena(begin, CAP);
+
     void *jmp_buf[5];
     if (__builtin_setjmp(jmp_buf)) {
-        flo_html_destroyArena(&arena);
-        FLO_HTML_PRINT_ERROR("OOM in arena!\n");
-        return false;
+        if (munmap(arena.beg, arena.cap) == -1) {
+            FLO_PRINT_ERROR("Failed to unmap memory from arena!\n"
+                            "Arena Details:\n"
+                            "  beg: %p\n"
+                            "  end: %p\n"
+                            "  cap: %td\n"
+                            "Zeroing Arena regardless.",
+                            arena.beg, arena.end, arena.cap);
+        }
+        FLO_PRINT_ERROR("OOM/overflow in arena!\n");
+        return -1;
     }
     arena.jmp_buf = jmp_buf;
 
@@ -29,10 +48,18 @@ bool benchmarkFloHtmlParserSingleArena(char *inputDirectory) {
         while (ent != NULL) {
             snprintf(fileLocation, sizeof(fileLocation), "%s%s", inputDirectory,
                      ent->d_name);
-            if (!parseFile(FLO_HTML_S_LEN(fileLocation, strlen(fileLocation)),
+            if (!parseFile(FLO_STRING_LEN(fileLocation, strlen(fileLocation)),
                            arena)) {
                 printf("Failed to parse file %s\n", fileLocation);
-                flo_html_destroyArena(&arena);
+                if (munmap(arena.beg, arena.cap) == -1) {
+                    FLO_PRINT_ERROR("Failed to unmap memory from arena!\n"
+                                    "Arena Details:\n"
+                                    "  beg: %p\n"
+                                    "  end: %p\n"
+                                    "  cap: %td\n"
+                                    "Zeroing Arena regardless.",
+                                    arena.beg, arena.end, arena.cap);
+                }
                 return false;
             }
 
@@ -40,11 +67,27 @@ bool benchmarkFloHtmlParserSingleArena(char *inputDirectory) {
         }
     } else {
         printf("Incorrect input directory!\n");
-        flo_html_destroyArena(&arena);
+        if (munmap(arena.beg, arena.cap) == -1) {
+            FLO_PRINT_ERROR("Failed to unmap memory from arena!\n"
+                            "Arena Details:\n"
+                            "  beg: %p\n"
+                            "  end: %p\n"
+                            "  cap: %td\n"
+                            "Zeroing Arena regardless.",
+                            arena.beg, arena.end, arena.cap);
+        }
         return false;
     }
 
-    flo_html_destroyArena(&arena);
+    if (munmap(arena.beg, arena.cap) == -1) {
+        FLO_PRINT_ERROR("Failed to unmap memory from arena!\n"
+                        "Arena Details:\n"
+                        "  beg: %p\n"
+                        "  end: %p\n"
+                        "  cap: %td\n"
+                        "Zeroing Arena regardless.",
+                        arena.beg, arena.end, arena.cap);
+    }
 
     return true;
 }
@@ -58,22 +101,46 @@ bool benchmarkFloHtmlParserArenaPerFile(char *inputDirectory) {
         while (ent != NULL) {
             snprintf(fileLocation, sizeof(fileLocation), "%s%s", inputDirectory,
                      ent->d_name);
-            flo_html_Arena arena = flo_html_newArena(1U << 27U);
-            void *jmp_buf[5];
-            if (__builtin_setjmp(jmp_buf)) {
-                flo_html_destroyArena(&arena);
-                FLO_HTML_PRINT_ERROR("OOM in arena!\n");
-                return false;
-            }
-            arena.jmp_buf = jmp_buf;
-            if (!parseFile(FLO_HTML_S_LEN(fileLocation, strlen(fileLocation)),
-                           arena)) {
-                printf("Failed to parse file %s\n", fileLocation);
-                flo_html_destroyArena(&arena);
-                return false;
+
+            char *begin = mmap(NULL, CAP, PROT_READ | PROT_WRITE,
+                               MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+            if (begin == MAP_FAILED) {
+                FLO_PRINT_ERROR("Failed to allocate memory!\n");
+                return -1;
             }
 
-            flo_html_destroyArena(&arena);
+            flo_Arena arena = flo_createArena(begin, CAP);
+
+            void *jmp_buf[5];
+            if (__builtin_setjmp(jmp_buf)) {
+                if (munmap(arena.beg, arena.cap) == -1) {
+                    FLO_PRINT_ERROR("Failed to unmap memory from arena!\n"
+                                    "Arena Details:\n"
+                                    "  beg: %p\n"
+                                    "  end: %p\n"
+                                    "  cap: %td\n"
+                                    "Zeroing Arena regardless.",
+                                    arena.beg, arena.end, arena.cap);
+                }
+                FLO_PRINT_ERROR("OOM/overflow in arena!\n");
+                return -1;
+            }
+            arena.jmp_buf = jmp_buf;
+
+            if (!parseFile(FLO_STRING_LEN(fileLocation, strlen(fileLocation)),
+                           arena)) {
+                printf("Failed to parse file %s\n", fileLocation);
+                return false;
+            }
+            if (munmap(arena.beg, arena.cap) == -1) {
+                FLO_PRINT_ERROR("Failed to unmap memory from arena!\n"
+                                "Arena Details:\n"
+                                "  beg: %p\n"
+                                "  end: %p\n"
+                                "  cap: %td\n"
+                                "Zeroing Arena regardless.",
+                                arena.beg, arena.end, arena.cap);
+            }
             ent = readdir(dir);
         }
     } else {
